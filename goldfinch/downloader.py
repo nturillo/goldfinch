@@ -70,4 +70,5 @@ class Downloader:
         except OSError:
             return DownloadResponse(title, "", "", DOWNLOAD_ERROR)
         time = datetime.now()
+        time_str = time.strftime(r"%m-%d-%Y %H:%M:%S")
         return DownloadResponse(title, download_file_path, time, SUCCESS)
