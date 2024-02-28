@@ -1,5 +1,7 @@
 pyvenv.cfg
 /env/*
-/__pycache__/*
+/__pycache__
 *.epub
-/results/*
+/results
+*.pdf
+/test_downloads
