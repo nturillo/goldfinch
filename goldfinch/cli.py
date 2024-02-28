@@ -70,12 +70,14 @@ def update() -> None:
     typer.secho(f"Database updated")
 
 @app.command()
-def download() -> None:
+def download(
+    retry_failed: Annotated[bool, typer.Option("--retry", "-r", help="Retry failed downloads. Will not download new books.")] = False,
+) -> None:
     goldfinch = get_goldfinch()
-    download_error = goldfinch.download_all()
+    download_error = goldfinch.download_all(retry_failed)
     if download_error:
         typer.secho(
-            f"download failed with {ERRORS[download_error]}",
+            f"downloads failed with {ERRORS[download_error]}",
             fg=typer.colors.RED
         )
     typer.secho(f"Downloads complete")

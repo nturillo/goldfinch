@@ -25,10 +25,14 @@ class GRHandler():
         books = {}
         for item in results:
             title = item.find("td", class_ = "field title").text[5:].strip().replace("\n", "")
+
             author = item.find("td", class_ = "field author").text[6:].strip().replace("\n", "")
+            author = author.replace("*", "")
+            
             date_added = item.find("td", class_ = "field date_added").text[10:].strip().replace("\n", "")
             date_time = datetime.strptime(date_added, "%b %d, %Y")
             date_added = date_time.strftime("%m-%d-%Y")
+
             key = title + author
             books[key] = {
                 "title": title,

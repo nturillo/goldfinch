@@ -28,10 +28,19 @@ class DownloadResponse(NamedTuple):
 class Downloader:
     def __init__(self, downloads_path: Path) -> None:
         self.downloads_path = downloads_path
+    
+    def try_url(self, url:str) -> int:
+        try:
+            request = requests.get(url)
+        except requests.RequestException:
+            return DOWNLOAD_ERROR
+        return SUCCESS
 
     def download(self, title: str, author: str) -> DownloadResponse:
         url = f"https://libgen.is/fiction/?q={author.replace(" ", "+").replace(",", r"%2C")}&criteria=authors&language=English&format=epub"
         #print(url)
+        typer.secho(f"Searching for {title} by {author} at link: {url}", fg=typer.colors.BRIGHT_CYAN)
+
         try:
             request = requests.get(url)
         except requests.RequestException:
@@ -71,4 +80,7 @@ class Downloader:
             return DownloadResponse(title, "", "", DOWNLOAD_ERROR)
         time = datetime.now()
         time_str = time.strftime(r"%m-%d-%Y %H:%M:%S")
-        return DownloadResponse(title, download_file_path, time, SUCCESS)
+
+        download_str =  f"{download_file_path}"
+
+        return DownloadResponse(title, download_str, time_str, SUCCESS)

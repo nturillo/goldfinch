@@ -25,6 +25,7 @@ def init_database(db_path: Path, date_since_download: str) -> int:
     db = {
         "undownloaded_books": {},
         "downloaded_books": {},
+        "failed_books": {},
         "date_since_download": date_since_download
     }
     try:
