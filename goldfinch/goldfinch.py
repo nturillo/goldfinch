@@ -85,6 +85,8 @@ class Goldfinch:
                 "link": download_response.link
             }
             delete_from_undownloaded.append(key)
+            typer.secho(f"{book["title"]} downloaded successfully",
+                        fg=typer.colors.GREEN)
 
         for key in delete_from_undownloaded:
             del db_response.db["undownloaded_books"][key]

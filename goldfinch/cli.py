@@ -67,7 +67,8 @@ def update() -> None:
             f"update failed with {ERRORS[update_error]}",
             fg=typer.colors.RED
         )
-    typer.secho(f"Database updated")
+    typer.secho(f"Database updated",
+                fg=typer.colors.GREEN)
 
 @app.command()
 def download(
@@ -80,4 +81,5 @@ def download(
             f"downloads failed with {ERRORS[download_error]}",
             fg=typer.colors.RED
         )
-    typer.secho(f"Downloads complete")
+    typer.secho(f"Downloads complete",
+                fg=typer.colors.GREEN)

@@ -4,6 +4,7 @@ import requests
 from bs4 import BeautifulSoup
 from typing import Dict, NamedTuple
 from datetime import datetime
+import re
 
 from __init__ import GR_ERROR, SUCCESS
 
@@ -25,6 +26,8 @@ class GRHandler():
         books = {}
         for item in results:
             title = item.find("td", class_ = "field title").text[5:].strip().replace("\n", "")
+            brackets_pattern = re.compile(r"[\[({].*[\])}]")
+            title = brackets_pattern.sub("", title).strip()
 
             author = item.find("td", class_ = "field author").text[6:].strip().replace("\n", "")
             author = author.replace("*", "")
