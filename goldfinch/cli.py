@@ -31,7 +31,6 @@ def init(
             fg=typer.colors.RED,
         )
         raise typer.Exit(1)
-    print(date_since_download)
     db_init_error = database.init_database(Path(db_path), date_since_download)
     if db_init_error:
         typer.secho(
@@ -51,9 +50,6 @@ def init(
     typer.secho(f"Downloads directory created at {downloads_path}", fg=typer.colors.GREEN)
     raise typer.Exit(1)
 
-@app.command()
-def helloworld(text: Annotated[str, typer.Argument(help="text text")] = "world") -> None:
-    print(f"Hello {text}")
 
 def get_goldfinch() -> goldfinch.Goldfinch:
     config_parser = config.get_config_parser()
@@ -82,4 +78,4 @@ def download() -> None:
             f"download failed with {ERRORS[download_error]}",
             fg=typer.colors.RED
         )
-    typer.secho(f"Books downloaded")
+    typer.secho(f"Downloads complete")

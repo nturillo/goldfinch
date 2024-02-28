@@ -10,8 +10,9 @@ __version__ = '0.1.0'
     DB_ERROR,
     JSON_ERROR,
     GR_ERROR,
-    DOWNLOAD_ERROR
-) = range(7)
+    DOWNLOAD_ERROR,
+    NO_RESULTS
+) = range(8)
 
 ERRORS = {
     SUCCESS : "No errors",
@@ -20,5 +21,6 @@ ERRORS = {
     DB_ERROR : "Database error",
     JSON_ERROR : "JSON error",
     GR_ERROR : "Goodreads error",
-    DOWNLOAD_ERROR : "Download error"
+    DOWNLOAD_ERROR : "Download error",
+    NO_RESULTS : "no results found on libgen.is"
 }

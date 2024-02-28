@@ -49,16 +49,34 @@ class Goldfinch:
 
         move_to_downloaded = []
         for key, book in db_response.db["undownloaded_books"].items():
+
             if (date_since_download - datetime.strptime(book["date_added"], "%m-%d-%Y") > timedelta(days=1)):
+                #Don't download books added before the last download
                 typer.secho(f"{book["title"]} not downloaded because it was added before previous download.")
                 db_response.db["downloaded_books"][key] = book
                 move_to_downloaded.append(key)
                 continue
-            download_response = self.downloader.download(book["title"], book["author"])
+
+            download_response = None
+            try: 
+                #Catch-all to ensure downloads don't stop
+                #Errors should be caught within the download method, but this is a safety
+                download_response = self.downloader.download(book["title"], book["author"])
+            except:
+                typer.secho(f"Error downloading {book["title"]} by {book["author"]}")
+                continue
+
             if (download_response.error != SUCCESS): 
                 typer.secho(f"Error downloading {book["title"]} by {book["author"]}")
                 continue
-            db_response.db["downloaded_books"][key] = book
+
+            db_response.db["downloaded_books"][key] = {
+                "title": book["title"],
+                "author": book["author"],
+                "date_added": book["date_added"],
+                "date_downloaded": download_response.date_downloaded,
+                "link": download_response.link
+            }
             move_to_downloaded.append(key)
 
         for key in move_to_downloaded:
