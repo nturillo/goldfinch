@@ -6,6 +6,7 @@ from typing import NamedTuple
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
+import urllib.parse
 
 from __init__ import __app_name__, SUCCESS, DOWNLOAD_ERROR, NO_RESULTS
 
@@ -58,14 +59,17 @@ class Downloader:
     def search_libgen(self, title: str, author: str, criteria: int, locale: int) -> SearchResponse:
         """search for a book by author on libgen.is"""
 
+        ## URL encode the search terms
+        url_author = urllib.parse.quote(author)
+        url_title = urllib.parse.quote(title)
         search_term = ""
         match criteria:
             case Downloader.AUTHOR:
-                search_term = author.replace(' ', '+').replace(',', r'%2C')
+                search_term = url_author
             case Downloader.TITLE:
-                search_term = title.replace(' ', '+')
+                search_term = url_title
             case Downloader.BOTH:
-                search_term = f"{title.replace(' ', '+')} {author.replace(' ', '+').replace(',', r'%2C')}"
+                search_term = url_author + "+" + url_title
 
         url = ""
         match locale:
