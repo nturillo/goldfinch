@@ -40,7 +40,7 @@ class Downloader:
                 request = requests.get(download_url)
             except requests.RequestException:
                 continue
-            if (request.status_code != 200): return ""
+            if (request.status_code != 200): continue
             with open(download_path, "wb") as file:
                 file.write(request.content)
             return f"{url}"
@@ -95,13 +95,12 @@ class Downloader:
         return_links = []
         for item in items:
             item_title = item.find_all("td")[2].find("a").text
+            print(item_title)
             if (item_title not in title and title not in item_title): continue
             mirrors = item.find_all("ul", class_ = "record_mirrors_compact") if locale == Downloader.FICTION else item.find_all("td")[9:10]
             links = mirrors[0].find_all("li") if locale == Downloader.FICTION else mirrors
-            if (len(links) < 2): continue
+            print(links[0].find("a")["href"])
             return_links.append(links[0].find("a")["href"])
-            return_links.append(links[1].find("a")["href"])
-        
         return Downloader.SearchResponse(return_links, SUCCESS)
 
 
