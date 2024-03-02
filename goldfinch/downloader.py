@@ -32,6 +32,7 @@ class Downloader:
     
     def try_url_download(self, urls, download_path: Path) -> str:
         for url in urls:
+            typer.secho(f"Trying url: {url}", fg=typer.colors.BRIGHT_CYAN)
             try:
                 request = requests.get(url)
                 soup = BeautifulSoup(request.content, "html.parser")
@@ -41,14 +42,14 @@ class Downloader:
                 continue
             with open(download_path, "wb") as file:
                 file.write(request.content)
-            return f"{download_path}"
+            return f"{url}"
         return ""
 
     class SearchResponse(NamedTuple):
         links: str
         error: int
     
-    (AUTHOR, TITLE, BOTH) = range(3)
+    (AUTHOR, BOTH, TITLE) = range(3)
     (FICTION, NONFICTION) = range(2)
     CRITERIA = {
         AUTHOR : "authors",
@@ -77,6 +78,7 @@ class Downloader:
                 url = f"https://libgen.is/fiction/?q={search_term}&criteria={Downloader.CRITERIA[criteria]}&language=English&format=epub"
             case Downloader.NONFICTION:
                 url = f"https://libgen.is/search.php?req={search_term}&open=0&res=100&view=simple&phrase=1&column=def"
+
         try:
             request = requests.get(url)
         except requests.RequestException:
@@ -89,17 +91,17 @@ class Downloader:
         items = table.find_all("tr")[1:]
         if (len(items) == 0): 
             return Downloader.SearchResponse("", NO_RESULTS)
-        links = []
+        return_links = []
         for item in items:
             item_title = item.find_all("td")[2].find("a").text
             if (item_title not in title and title not in item_title): continue
             mirrors = item.find_all("ul", class_ = "record_mirrors_compact") if locale == Downloader.FICTION else item.find_all("td")[9:10]
             links = mirrors[0].find_all("li") if locale == Downloader.FICTION else mirrors
             if (len(links) < 2): continue
-            links.append(links[0].find("a")["href"])
-            links.append(links[1].find("a")["href"])
+            return_links.append(links[0].find("a")["href"])
+            return_links.append(links[1].find("a")["href"])
         
-        return Downloader.SearchResponse(links, SUCCESS)
+        return Downloader.SearchResponse(return_links, SUCCESS)
 
 
     def download(self, title: str, author: str) -> DownloadResponse:
@@ -108,7 +110,7 @@ class Downloader:
         
         typer.secho(f"Searching for {title} by {author} in fiction", fg=typer.colors.BRIGHT_CYAN)
         for i in range(3):
-            search_response_title = self.search_libgen(title, author, Downloader.TITLE, Downloader.FICTION)
+            search_response_title = self.search_libgen(title, author, i, Downloader.FICTION)
             if (search_response_title.error == SUCCESS):
                 download_try = self.try_url_download(search_response_title.links, download_file_path)
                 if (download_try != ""):
@@ -118,7 +120,7 @@ class Downloader:
         
         typer.secho(f"Searching for {title} by {author} in nonfiction", fg=typer.colors.BRIGHT_CYAN)
         for i in range(3):
-            search_response_title = self.search_libgen(title, author, Downloader.TITLE, Downloader.NONFICTION)
+            search_response_title = self.search_libgen(title, author, i, Downloader.NONFICTION)
             if (search_response_title.error == SUCCESS):
                 download_try = self.try_url_download(search_response_title.links, download_file_path)
                 if (download_try != ""):
