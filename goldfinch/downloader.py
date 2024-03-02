@@ -40,6 +40,7 @@ class Downloader:
                 request = requests.get(download_url)
             except requests.RequestException:
                 continue
+            if (request.status_code != 200): return ""
             with open(download_path, "wb") as file:
                 file.write(request.content)
             return f"{url}"
