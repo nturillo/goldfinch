@@ -6,7 +6,7 @@ from goodreads import GRHandler
 from database import DBHandler, DBResponse
 from downloader import Downloader, DownloadResponse
 from book import Book
-from __init__ import SUCCESS, ERRORS
+from __init__ import SUCCESS, ERRORS, NOT_IN_DB
 
 class Goldfinch:
     def __init__(self, db_path: Path, gr_url: str, downloads_path: Path) -> None:
@@ -14,16 +14,39 @@ class Goldfinch:
         self.gr_handler = GRHandler(gr_url)
         self.downloader = Downloader(downloads_path)
     
-    def add_book(self, title: str, author: str, date_added: str) -> int:
+    def add_book(self, title: str, author: str, date_added: str, destination: str) -> int:
         """add a book to the database"""
         db_response = self.db_handler.read_db()
         if (db_response.error != SUCCESS): return db_response.error
         key = title + author
-        db_response.db["undownloaded_books"][key] = {
+        db_response.db[destination][key] = {
             "title": title,
             "author": author,
             "date_added": date_added
         }
+        db_response = self.db_handler.write_db(db_response.db)
+        return db_response.error
+
+    def remove_book(self, title: str, author: str) -> int:
+        """remove a book from the database"""
+        db_response = self.db_handler.read_db()
+        if (db_response.error != SUCCESS): return db_response.error
+
+        swapped_author = author.split(", ")[1] + " " + author.split(", ")[0] if (", " in author) else author.split(" ")[1] + ", " + author.split(" ")[0]
+        removed = False
+        for a in [author, swapped_author]:
+            key = title + a
+            if (key in db_response.db["undownloaded_books"]):
+                del db_response.db["undownloaded_books"][key]
+                removed = True
+            elif (key in db_response.db["downloaded_books"]):
+                del db_response.db["downloaded_books"][key]
+                removed = True
+            elif (key in db_response.db["failed_books"]):
+                del db_response.db["failed_books"][key]
+                removed = True
+            if removed: break
+        if not removed: return NOT_IN_DB
         db_response = self.db_handler.write_db(db_response.db)
         return db_response.error
 
@@ -51,7 +74,7 @@ class Goldfinch:
         source = "undownloaded_books" if not retry_failed else "failed_books"
         for key, book in db_response.db[source].items():
 
-            if (date_since_download - datetime.strptime(book["date_added"], "%m-%d-%Y") > timedelta(days=1)):
+            if (book["date_added"] is not None and date_since_download - datetime.strptime(book["date_added"], "%m-%d-%Y") > timedelta(days=1)):
                 #Don't download books added before the last download
                 typer.secho(f"{book["title"]} moved to downloaded because it was added before previous download.")
                 db_response.db["downloaded_books"][key] = book
@@ -89,11 +112,27 @@ class Goldfinch:
                         fg=typer.colors.GREEN)
 
         for key in delete_from_undownloaded:
-            del db_response.db["undownloaded_books"][key]
+            if key in db_response.db["undownloaded_books"]:
+                del db_response.db["undownloaded_books"][key]
 
         db_response = self.db_handler.write_db(db_response.db)
         return db_response.error
     
-    def list_downloaded(self) -> int:
-        """list books in downloaded"""
-        pass
+    def list(self, source : str = None) -> int:
+        """list books in database"""
+        db_response = self.db_handler.read_db()
+        if (db_response.error != SUCCESS): return db_response.error
+        if (source == None):
+            typer.secho("Undownloaded Books", fg=typer.colors.GREEN)
+            for key, book in db_response.db["undownloaded_books"].items():
+                typer.secho(f"\t{book['title']} by {book['author']}", fg=typer.colors.WHITE)
+            typer.secho("Downloaded Books", fg=typer.colors.GREEN)
+            for key, book in db_response.db["downloaded_books"].items():
+                typer.secho(f"\t{book['title']} by {book['author']}", fg=typer.colors.WHITE)
+            typer.secho("Failed Books", fg=typer.colors.GREEN)
+            for key, book in db_response.db["failed_books"].items():
+                typer.secho(f"\t{book['title']} by {book['author']}", fg=typer.colors.WHITE)
+        else:
+            typer.secho(f"{source.replace("_", " ")} Books", fg=typer.colors.GREEN)
+            for key, book in db_response.db[source].items():
+                typer.secho(f"{book['title']} by {book['author']}", fg=typer.colors.WHITE)

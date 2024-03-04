@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 import urllib.parse
 
-from __init__ import __app_name__, SUCCESS, DOWNLOAD_ERROR, NO_RESULTS
+from __init__ import __app_name__, SUCCESS, DOWNLOAD_ERROR, NO_RESULTS, CANT_REACH_LIBGEN
 
 DEFAULT_DOWNLOADS_DIR = Path.home() / "goldfinch_book_downloads"
 
@@ -83,7 +83,7 @@ class Downloader:
         try:
             request = requests.get(url)
         except requests.RequestException:
-            return Downloader.SearchResponse("", DOWNLOAD_ERROR)
+            return Downloader.SearchResponse("", CANT_REACH_LIBGEN)
         
         soup = BeautifulSoup(request.content, "html.parser")
         table = soup.find("table", class_ = "catalog" if locale == Downloader.FICTION else "c")
@@ -111,6 +111,7 @@ class Downloader:
         typer.secho(f"Searching for {title} by {author} in fiction", fg=typer.colors.BRIGHT_CYAN)
         for i in range(3):
             search_response_title = self.search_libgen(title, author, i, Downloader.FICTION)
+            if (search_response_title.error == CANT_REACH_LIBGEN): return DownloadResponse(title, "", "", CANT_REACH_LIBGEN)
             if (search_response_title.error == SUCCESS):
                 download_try = self.try_url_download(search_response_title.links, download_file_path)
                 if (download_try != ""):
@@ -121,6 +122,7 @@ class Downloader:
         typer.secho(f"Searching for {title} by {author} in nonfiction", fg=typer.colors.BRIGHT_CYAN)
         for i in range(3):
             search_response_title = self.search_libgen(title, author, i, Downloader.NONFICTION)
+            if (search_response_title.error == CANT_REACH_LIBGEN): return DownloadResponse(title, "", "", CANT_REACH_LIBGEN)
             if (search_response_title.error == SUCCESS):
                 download_try = self.try_url_download(search_response_title.links, download_file_path)
                 if (download_try != ""):

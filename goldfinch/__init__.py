@@ -11,8 +11,10 @@ __version__ = '0.1.0'
     JSON_ERROR,
     GR_ERROR,
     DOWNLOAD_ERROR,
-    NO_RESULTS
-) = range(8)
+    NO_RESULTS,
+    NOT_IN_DB,
+    CANT_REACH_LIBGEN
+) = range(10)
 
 ERRORS = {
     SUCCESS : "No errors",
@@ -22,5 +24,7 @@ ERRORS = {
     JSON_ERROR : "JSON error",
     GR_ERROR : "Goodreads error",
     DOWNLOAD_ERROR : "Download error",
-    NO_RESULTS : "no results found on libgen.is"
+    NO_RESULTS : "no results found on libgen.is",
+    NOT_IN_DB : "book not in database",
+    CANT_REACH_LIBGEN : "can't reach libgen.is. Is your vpn on?"
 }

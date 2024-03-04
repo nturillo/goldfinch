@@ -22,7 +22,7 @@ def init(
     db_path: Annotated[str, typer.Option("--db_path", help="path to database.json")] = DEFAULT_DB_PATH,
     downloads_path: Annotated[str, typer.Option("--downloads_path", help="path to downloads directory")] = DEFAULT_DOWNLOADS_DIR
     ) -> None:
-    """Initialize the config file and book database"""
+    """Initialize the config file and book database. If the database already exists, it will be overwritten."""
     gr_url = gr_url.replace("%", "%%")
     app_init_error = config.init_app(db_path, gr_url, downloads_path)
     if app_init_error:
@@ -60,6 +60,7 @@ def get_goldfinch() -> goldfinch.Goldfinch:
 
 @app.command()
 def update() -> None:
+    """Update the undownloaded database with the books from Goodreads"""
     goldfinch = get_goldfinch()
     update_error = goldfinch.update_db()
     if update_error:
@@ -74,6 +75,7 @@ def update() -> None:
 def download(
     retry_failed: Annotated[bool, typer.Option("--retry", "-r", help="Retry failed downloads. Will not download new books.")] = False,
 ) -> None:
+    """Download books from the undownloaded database. If --retry is used, only failed downloads will be retried."""
     goldfinch = get_goldfinch()
     download_error = goldfinch.download_all(retry_failed)
     if download_error:
@@ -82,4 +84,62 @@ def download(
             fg=typer.colors.RED
         )
     typer.secho(f"Downloads complete",
+                fg=typer.colors.GREEN)
+
+@app.command()
+def list(
+    downloaded: Annotated[bool, typer.Option("--downloaded", "-d", help="List downloaded books.")] = False,
+    undownloaded: Annotated[bool, typer.Option("--undownloaded", "-u", help="List undownloaded books.")] = False,
+    failed: Annotated[bool, typer.Option("--failed", "-f", help="List failed downloads.")] = False,
+) -> None:
+    """List books in the database. Only one of --downloaded, --undownloaded, or --failed can be used at a time."""
+    if (downloaded and undownloaded) or (downloaded and failed) or (undownloaded and failed):
+        typer.secho(
+            "Only one of --downloaded, --undownloaded, or --failed can be used at a time",
+            fg=typer.colors.RED
+        )
+        raise typer.Exit(1)
+    goldfinch = get_goldfinch()
+    source = "downloaded_books" if downloaded else "undownloaded_books" if undownloaded else "failed_books" if failed else None
+    list_error = goldfinch.list(source)
+    if list_error:
+        typer.secho(
+            f"list failed with {ERRORS[list_error]}",
+            fg=typer.colors.RED
+        )
+
+@app.command()
+def add(
+    title: Annotated[str, typer.Argument(help="title of the book")],
+    author: Annotated[str, typer.Argument(help="author of the book")],
+    date_added: Annotated[str, typer.Option("--date", help="date added to the database\nin the form MM-DD-YYYY")] = None,
+    destination: Annotated[str, typer.Option("--destination", "-d", help="destination of the book: undownloaded_books, downloaded_books, failed_books")] = "undownloaded_books"
+) -> None:
+    """Add a book to the database"""
+    goldfinch = get_goldfinch()
+    add_error = goldfinch.add_book(title, author, date_added, destination)
+    if add_error:
+        typer.secho(
+            f"add failed with {ERRORS[add_error]}",
+            fg=typer.colors.RED
+        )
+        raise typer.Exit(1)
+    typer.secho(f"Book added",
+                fg=typer.colors.GREEN)
+
+@app.command()
+def remove(
+    title: Annotated[str, typer.Argument(help="title of the book")],
+    author: Annotated[str, typer.Argument(help="author of the book")]
+) -> None:
+    """Remove a book from the database"""
+    goldfinch = get_goldfinch()
+    remove_error = goldfinch.remove_book(title, author)
+    if remove_error:
+        typer.secho(
+            f"remove failed with {ERRORS[remove_error]}",
+            fg=typer.colors.RED
+        )
+        raise typer.Exit(1)
+    typer.secho(f"Book removed",
                 fg=typer.colors.GREEN)
