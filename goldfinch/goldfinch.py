@@ -59,6 +59,7 @@ class Goldfinch:
         for key, book in gr_response.books.items():
             if (key in db_response.db["undownloaded_books"]): continue
             if (key in db_response.db["downloaded_books"]): continue
+            if (key in db_response.db["failed_books"]): continue
             db_response.db["undownloaded_books"][key] = book
         db_response = self.db_handler.write_db(db_response.db)
         return db_response.error
