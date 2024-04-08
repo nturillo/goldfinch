@@ -15,11 +15,21 @@ class GRResponse(NamedTuple):
 class GRHandler():
     def __init__(self, gr_url: str) -> None:
         self.url = gr_url
+
+    def get_url(self) -> str:
+        return self.url
+    
+    def set_url(self, new_url: str) -> None:
+        print(new_url)
+        self.url = new_url
     
     def fetch_books(self) -> GRResponse:
         try:
-            request = requests.get(self.url)
+            headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
+            request = requests.get(self.url, headers=headers)
         except requests.RequestException:
+            return GRResponse(GR_ERROR, {})
+        if (request.status_code != 200): 
             return GRResponse(GR_ERROR, {})
         soup = BeautifulSoup(request.content, "html.parser")
         results = soup.find_all("tr", class_ = "bookalike review")

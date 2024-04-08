@@ -46,3 +46,6 @@ def get_config_parser() -> configparser.ConfigParser:
     config_parser = configparser.ConfigParser()
     config_parser.read(CONFIG_FILE_PATH)
     return config_parser
+
+def get_config_path() -> str:
+    return CONFIG_FILE_PATH

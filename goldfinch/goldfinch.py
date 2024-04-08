@@ -136,3 +136,10 @@ class Goldfinch:
             typer.secho(f"{source.replace("_", " ")} Books", fg=typer.colors.GREEN)
             for key, book in db_response.db[source].items():
                 typer.secho(f"{book['title']} by {book['author']}", fg=typer.colors.WHITE)
+
+    def get_gr_url(self) -> str:
+        url = self.gr_handler.get_url()
+        return url
+    
+    def set_gr_url(self, url: str) -> None:
+        self.gr_handler.set_url(url)

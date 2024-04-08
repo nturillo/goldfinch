@@ -143,3 +143,21 @@ def remove(
         raise typer.Exit(1)
     typer.secho(f"Book removed",
                 fg=typer.colors.GREEN)
+
+@app.command()
+def url(
+    set_url: Annotated[str, typer.Option("--set", help = "Set the goodreads url")] = None
+) -> None:
+    """Get path to config file"""
+    goldfinch = get_goldfinch()
+    if (set_url):
+        goldfinch.set_gr_url(set_url)
+        return
+
+    url = goldfinch.get_gr_url()
+    typer.secho(f"Goodreads url: {url}")
+
+@app.command()
+def cfig() -> None:
+    path = config.get_config_path()
+    typer.secho(f"Config file path: {path}")
